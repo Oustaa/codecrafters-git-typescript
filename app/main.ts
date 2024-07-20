@@ -47,7 +47,7 @@ switch (command) {
     const fileContent = fileContentBuffer.toString("utf-8");
     const fileSize = fileContent.length;
 
-    const blobPrep = `${fileSize}\0${fileContent}`;
+    const blobPrep = `blob ${fileSize}\0${fileContent}`;
 
     const sha1 = crypto.createHash("sha1").update(blobPrep).digest("hex");
 
