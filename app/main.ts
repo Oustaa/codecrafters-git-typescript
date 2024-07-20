@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import zlib from "node:zlib";
+import crypto from "node:crypto";
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -7,6 +8,7 @@ const command = args[0];
 enum Commands {
   Init = "init",
   Catfile = "cat-file",
+  HashObject = "hash-object",
 }
 
 switch (command) {
@@ -17,6 +19,7 @@ switch (command) {
     fs.mkdirSync(".git/refs", { recursive: true });
     fs.writeFileSync(".git/HEAD", "ref: refs/heads/main\n");
     break;
+
   case Commands.Catfile:
     if (args.length !== 3) {
       console.error("Usage: git cat-file <object-type> <object-id>");
@@ -33,6 +36,36 @@ switch (command) {
       .toString();
 
     process.stdout.write(blobContent);
+
+    break;
+
+  case Commands.HashObject:
+    const storeObjectFlag = args[1] === "-w";
+    const filePath = storeObjectFlag ? args[2] : args[1];
+
+    const fileContentBuffer = fs.readFileSync(filePath);
+    const fileContent = fileContentBuffer.toString("utf-8");
+    const fileSize = fileContent.length;
+
+    const blobPrep = `${fileSize}\0${fileContent}`;
+
+    const sha1 = crypto.createHash("sha1").update(blobPrep).digest("hex");
+
+    if (storeObjectFlag) {
+      const folderName = sha1.substring(0, 2);
+      const fileName = sha1.substring(2);
+
+      const compressedBlob = zlib.deflateSync(Buffer.from(blobPrep));
+
+      fs.mkdirSync(`./.git/objects/${folderName}`);
+      fs.writeFileSync(
+        `./.git/objects/${folderName}/${fileName}`,
+        compressedBlob
+      );
+    }
+
+    process.stdout.write(sha1);
+
     break;
 
   default:
