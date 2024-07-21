@@ -2,7 +2,11 @@ import * as fs from "node:fs";
 import zlib from "node:zlib";
 import crypto from "node:crypto";
 
-export function getObjectConent(path: string): string {
+export function getObjectConent(sha1: string): string {
+  const blobDir = sha1.substring(0, 2);
+  const blobFile = sha1.substring(2);
+  const path = `./.git/objects/${blobDir}/${blobFile}`;
+
   const blob = fs.readFileSync(path);
 
   const decompressedBuffer = zlib.unzipSync(blob);
