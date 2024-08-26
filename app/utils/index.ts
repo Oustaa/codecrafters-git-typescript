@@ -1,6 +1,7 @@
 export {
   getObjectConent,
-  getObjectSha1,
+  generateObjectSha1,
   storeObject,
+  writeTree,
 } from "./ObjectManipulation";
 

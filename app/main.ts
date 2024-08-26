@@ -1,6 +1,11 @@
 import * as fs from "node:fs";
 import zlib from "node:zlib";
-import { getObjectConent, getObjectSha1, storeObject } from "./utils";
+import {
+  getObjectConent,
+  generateObjectSha1,
+  storeObject,
+  writeTree,
+} from "./utils";
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -10,6 +15,7 @@ enum Commands {
   Catfile = "cat-file",
   HashObject = "hash-object",
   LsTree = "ls-tree",
+  WriteTree = "write-tree",
 }
 
 switch (command) {
@@ -28,19 +34,15 @@ switch (command) {
     }
 
     const object = getObjectConent(args[2]);
-
-    process.stdout.write(object);
+    // process.stdout.write
+    console.log(object);
     break;
 
   case Commands.HashObject:
     const storeObjectFlag = args[1] === "-w";
     const filePath = storeObjectFlag ? args[2] : args[1];
 
-    const [sha1, blob] = getObjectSha1(filePath);
-
-    if (storeObjectFlag) {
-      storeObject(sha1, blob);
-    }
+    const sha1 = generateObjectSha1({ filePath, store: storeObjectFlag });
 
     process.stdout.write(sha1);
     break;
@@ -62,18 +64,10 @@ switch (command) {
     const dec = new TextDecoder();
     const str = dec.decode(Buffer.from(treeContentObject));
 
-    // console.log(
-    //   treeContentObject.split("\0").slice(1, -1)
-    //   // .reduce(
-    //   //   (acc: string[], e) => [...acc, e.split(" ").at(-1) as string],
-    //   //   []
-    //   // )
-    // );
-
     const content = treeContentObject;
     const contentToArray = content.split("\0");
     contentToArray.splice(-1, 1);
-
+    // process.stdout.write;
     console.log(
       contentToArray
         .reduce(
@@ -82,7 +76,11 @@ switch (command) {
         )
         .join("\n")
     );
-    // process.stdout.write(content);
+    break;
+
+  case Commands.WriteTree:
+    const tree = writeTree(process.cwd());
+    console.log(tree.toString());
     break;
 
   default:
